@@ -5,8 +5,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
-import java.time.LocalDate;
-import java.util.List;
 
 @Entity
 @Data
@@ -21,9 +19,11 @@ public class TrainingClass {
 
     private String name;
 
-    @Column(name = "start_date")
-    private LocalDate startDate;
+    @Embedded
+    private CourseInterval courseInterval;
 
-    @Column(name = "end_date")
-    private LocalDate endDate;
+    public TrainingClass(String name, CourseInterval courseInterval) {
+        this.name = name;
+        this.courseInterval = courseInterval;
+    }
 }

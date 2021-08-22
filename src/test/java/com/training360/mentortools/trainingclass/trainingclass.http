@@ -1,0 +1,12 @@
+POST http://localhost:8081/api/trainingclasses
+Content-Type: application/json
+
+{
+  "name": "1. Course"
+}
+
+###
+GET http://localhost:8081/api/trainingclasses
+Accept: application/json
+
+###

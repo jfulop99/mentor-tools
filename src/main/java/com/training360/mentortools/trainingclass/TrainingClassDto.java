@@ -15,8 +15,5 @@ public class TrainingClassDto {
 
     private String name;
 
-    private LocalDate startDate;
-
-    private LocalDate endDate;
-
+    private CourseInterval courseInterval;
 }
