@@ -39,4 +39,19 @@ public class StudentService {
     private Student findStudentById(Long id){
         return studentRepository.findById(id).orElseThrow(() -> new IllegalArgumentException("Cannot find student id = " + id));
     }
+
+    public StudentDto updateStudent(Long id, UpdateStudentCommand command) {
+        Student student = findStudentById(id);
+        student.setName(command.getName());
+        student.setEmail(command.getEmail());
+        student.setGithubId(command.getGithubId());
+        student.setDetails(command.getDetails());
+        studentRepository.save(student);
+        return modelMapper.map(student, StudentDto.class);
+    }
+
+    public void deleteStudentById(Long id){
+        Student student = findStudentById(id);
+        studentRepository.delete(student);
+    }
 }
