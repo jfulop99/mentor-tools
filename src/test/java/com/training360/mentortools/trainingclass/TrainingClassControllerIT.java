@@ -17,7 +17,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@Sql(statements ={"delete from training_classes"})
+@Sql(statements ={"delete from registrations", "delete from training_classes"})
 class TrainingClassControllerIT {
 
     @Autowired
@@ -85,7 +85,7 @@ class TrainingClassControllerIT {
         template.delete("/api/trainingclasses/"+id);
 
         Problem problem = template.getForObject("/api/trainingclasses/"+id, Problem.class);
-        assertEquals("500 Internal Server Error", problem.getStatus().toString());
+        assertEquals("404 Not Found", problem.getStatus().toString());
         assertEquals("Trainingclass not found id = "+ id, problem.getDetail());
 
     }

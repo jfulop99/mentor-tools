@@ -1,10 +1,12 @@
 package com.training360.mentortools.student;
 
+import com.training360.mentortools.registration.RecordNotFoundException;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 
+import java.net.URI;
 import java.util.List;
 
 @Service
@@ -36,8 +38,8 @@ public class StudentService {
         return modelMapper.map(findStudentById(id), StudentDto.class);
     }
 
-    private Student findStudentById(Long id){
-        return studentRepository.findById(id).orElseThrow(() -> new IllegalArgumentException("Cannot find student id = " + id));
+    public Student findStudentById(Long id){
+        return studentRepository.findById(id).orElseThrow(() -> new RecordNotFoundException(URI.create("student/not-found"), "Cannot find student id = " + id));
     }
 
     public StudentDto updateStudent(Long id, UpdateStudentCommand command) {

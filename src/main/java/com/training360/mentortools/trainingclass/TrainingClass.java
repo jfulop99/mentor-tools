@@ -1,10 +1,13 @@
 package com.training360.mentortools.trainingclass;
 
+import com.training360.mentortools.registration.Registration;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Data
@@ -22,8 +25,19 @@ public class TrainingClass {
     @Embedded
     private CourseInterval courseInterval;
 
+    @OneToMany(mappedBy = "trainingClass", cascade = CascadeType.ALL)
+    private List<Registration> registrations;
+
     public TrainingClass(String name, CourseInterval courseInterval) {
         this.name = name;
         this.courseInterval = courseInterval;
+    }
+
+    public void addRegistration(Registration registration){
+        if (registrations == null){
+            registrations = new ArrayList<>();
+        }
+        registrations.add(registration);
+        registration.setTrainingClass(this);
     }
 }

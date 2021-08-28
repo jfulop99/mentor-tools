@@ -9,6 +9,7 @@ import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpMethod;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.web.client.RestTemplate;
+import org.zalando.problem.Problem;
 
 import java.util.List;
 
@@ -16,7 +17,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@Sql(statements ={"delete from students"})
+@Sql(statements ={"delete from registrations", "delete from students"})
 class StudentControllerIT {
 
     @Autowired
@@ -57,5 +58,21 @@ class StudentControllerIT {
         StudentDto otherStudentDto = template.getForObject("/api/students/" + id, StudentDto.class);
 
         assertEquals("John Doe", otherStudentDto.getName());
+    }
+
+    @Test
+    void deleteStudentByIdTest(){
+        StudentDto studentDto = template.postForObject("/api/students",
+                new CreateStudentCommand("John Doe", "john.doe@email.com"), StudentDto.class);
+
+        Long id = studentDto.getId();
+
+        template.delete("/api/students/" + id);
+
+        Problem problem = template.getForObject("/api/students/" + id, Problem.class);
+
+        assertEquals("404 Not Found", problem.getStatus().toString());
+        assertEquals("Cannot find student id = "+ id, problem.getDetail());
+
     }
 }

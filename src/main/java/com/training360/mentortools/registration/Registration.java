@@ -28,5 +28,10 @@ public class Registration {
     private Student student;
 
     @Enumerated(EnumType.STRING)
+    @Column(name = "status")
     private RegistrationStatus registrationStatus;
+
+    public Registration(RegistrationStatus registrationStatus) {
+        this.registrationStatus = registrationStatus;
+    }
 }

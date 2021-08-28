@@ -1,10 +1,12 @@
 package com.training360.mentortools.trainingclass;
 
+import com.training360.mentortools.registration.RecordNotFoundException;
 import javassist.NotFoundException;
 import lombok.AllArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 
+import java.net.URI;
 import java.util.List;
 
 @Service
@@ -33,9 +35,9 @@ public class TrainingClassService {
         return modelMapper.map(findTrainingClassById(id), TrainingClassDto.class);
     }
 
-    private TrainingClass findTrainingClassById(Long id){
+    public TrainingClass findTrainingClassById(Long id){
         return trainingClassRepository
-                .findById(id).orElseThrow(() -> new IllegalArgumentException("Trainingclass not found id = "+ id));
+                .findById(id).orElseThrow(() -> new RecordNotFoundException(URI.create("trainingclass/not-found"), "Trainingclass not found id = "+ id));
     }
 
     public TrainingClassDto updateTrainingClassById(Long id, UpdateTrainingClassCommand command) {
