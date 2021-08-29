@@ -34,4 +34,10 @@ public class ModuleController {
         return moduleService.getModule(id);
     }
 
+    @PutMapping("/{id}")
+    @Operation(summary = "Update a module")
+    public ModuleDto updateModule(@PathVariable Long id, @Valid @RequestBody UpdateModuleCommand command){
+        return moduleService.updateModule(id, command);
+    }
+
 }

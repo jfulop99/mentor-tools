@@ -58,4 +58,18 @@ class ModuleControllerIT {
 
         assertEquals("3. Module", moduleDto.getTitle());
     }
+
+    @Test
+    void updateModuleTest(){
+        Long id = template.postForObject("/api/modules", new CreateModuleCommand("3. Module", "http://t360.com/modules/3"),
+                ModuleDto.class).getId();
+
+        template.put("/api/modules/" + id, new UpdateModuleCommand("JPA Module", "http://t360.com/modules/jpa"));
+
+        ModuleDto moduleDto = template.getForObject("/api/modules/" + id, ModuleDto.class);
+
+        assertEquals("JPA Module", moduleDto.getTitle());
+        assertEquals("http://t360.com/modules/jpa", moduleDto.getUrl());
+
+    }
 }

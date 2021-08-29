@@ -37,4 +37,11 @@ public class ModuleService {
         return moduleRepository.findById(id).orElseThrow(() -> new RecordNotFoundException(URI.create("module/not-found"), "Module not found id = " + id));
     }
 
+    public ModuleDto updateModule(Long id, UpdateModuleCommand command) {
+        Module module = findModule(id);
+        module.setTitle(command.getTitle());
+        module.setUrl(command.getUrl());
+        moduleRepository.save(module);
+        return modelMapper.map(module, ModuleDto.class);
+    }
 }
