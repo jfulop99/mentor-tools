@@ -1,6 +1,7 @@
 package com.training360.mentortools.trainingclass;
 
 import com.training360.mentortools.registration.Registration;
+import com.training360.mentortools.syllabus.Syllabus;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -27,6 +28,10 @@ public class TrainingClass {
 
     @OneToMany(mappedBy = "trainingClass", cascade = CascadeType.ALL)
     private List<Registration> registrations;
+
+    @ManyToOne
+    @JoinColumn(name = "syllabus_id")
+    private Syllabus syllabus;
 
     public TrainingClass(String name, CourseInterval courseInterval) {
         this.name = name;

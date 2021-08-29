@@ -2,7 +2,6 @@ package com.training360.mentortools.student;
 
 import com.training360.mentortools.registration.RecordNotFoundException;
 import lombok.AllArgsConstructor;
-import lombok.NoArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 

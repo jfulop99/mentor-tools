@@ -46,4 +46,18 @@ public class TrainingClassController {
         trainingClassService.deleteTrainingClassById(id);
     }
 
+
+    @PostMapping("/{id}/syllabuses")
+    @Operation(description = "Add trainingclass to syllabus")
+    public TrainingClassDto addSyllabus(@PathVariable Long id, @Valid @RequestBody SyllabusCommand command){
+        return trainingClassService.addSyllabus(id, command);
+    }
+
+    @PutMapping("/{id}/syllabuses")
+    @Operation(description = "Update trainingclass syllabus")
+    public TrainingClassDto updateSyllabus(@PathVariable Long id, @Valid @RequestBody SyllabusCommand command){
+        return trainingClassService.updateSyllabus(id, command);
+    }
+
+
 }
