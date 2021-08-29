@@ -44,4 +44,9 @@ public class ModuleService {
         moduleRepository.save(module);
         return modelMapper.map(module, ModuleDto.class);
     }
+
+    public void deleteModule(Long id) {
+        Module module = findModule(id);
+        moduleRepository.delete(module);
+    }
 }

@@ -40,4 +40,10 @@ public class ModuleController {
         return moduleService.updateModule(id, command);
     }
 
+    @DeleteMapping("/{id}")
+    @Operation(summary = "Delete a module by id")
+    public void deleteModule(@PathVariable Long id){
+        moduleService.deleteModule(id);
+    }
+
 }

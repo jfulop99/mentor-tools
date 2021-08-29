@@ -7,8 +7,10 @@ import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpMethod;
 import org.springframework.test.context.jdbc.Sql;
+import org.zalando.problem.Problem;
 
 import java.util.List;
+import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
@@ -71,5 +73,53 @@ class ModuleControllerIT {
         assertEquals("JPA Module", moduleDto.getTitle());
         assertEquals("http://t360.com/modules/jpa", moduleDto.getUrl());
 
+    }
+
+    @Test
+    void deleteModuleAndNotFoundTest(){
+        Long id = template.postForObject("/api/modules", new CreateModuleCommand("3. Module", "http://t360.com/modules/3"),
+                ModuleDto.class).getId();
+
+        template.delete("/api/modules/" + id);
+
+        Problem problem = template.getForObject("/api/modules/" + id, Problem.class);
+
+        assertEquals("404 Not Found", problem.getStatus().toString());
+        assertEquals("Module not found id = "+ id, problem.getDetail());
+
+    }
+
+    @Test
+    void titleValidationTest(){
+        Problem problem = template.postForObject("/api/modules", new CreateModuleCommand("3.", "http://t360.com/modules/3"),
+                Problem.class);
+
+        assertEquals("400 Bad Request", problem.getStatus().toString());
+        List<Map<String, String>> violations = (List<Map<String, String>>) problem.getParameters().get("violations");
+        assertEquals("a hossznak a(z) 3 és 255 értékek között kell lennie", violations.get(0).get("message") );
+
+        Problem otherProblem = template.postForObject("/api/modules", new CreateModuleCommand(null, "http://t360.com/modules/3"),
+                Problem.class);
+
+        assertEquals("400 Bad Request", otherProblem.getStatus().toString());
+        violations = (List<Map<String, String>>) otherProblem.getParameters().get("violations");
+        assertEquals("nem lehet null", violations.get(0).get("message") );
+    }
+
+    @Test
+    void urlValidationTest(){
+        Problem problem = template.postForObject("/api/modules", new CreateModuleCommand("3. module", "ht"),
+                Problem.class);
+
+        assertEquals("400 Bad Request", problem.getStatus().toString());
+        List<Map<String, String>> violations = (List<Map<String, String>>) problem.getParameters().get("violations");
+        assertEquals("a hossznak a(z) 3 és 255 értékek között kell lennie", violations.get(0).get("message") );
+
+        Problem otherProblem = template.postForObject("/api/modules", new CreateModuleCommand("3. module", null),
+                Problem.class);
+
+        assertEquals("400 Bad Request", otherProblem.getStatus().toString());
+        violations = (List<Map<String, String>>) otherProblem.getParameters().get("violations");
+        assertEquals("nem lehet null", violations.get(0).get("message") );
     }
 }
