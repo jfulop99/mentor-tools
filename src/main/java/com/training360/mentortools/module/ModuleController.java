@@ -28,4 +28,10 @@ public class ModuleController {
         return moduleService.createModule(command);
     }
 
+    @GetMapping("/{id}")
+    @Operation(summary = "Get a module")
+    public ModuleDto getModule(@PathVariable Long id){
+        return moduleService.getModule(id);
+    }
+
 }

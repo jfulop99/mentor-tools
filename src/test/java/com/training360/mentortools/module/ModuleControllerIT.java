@@ -44,4 +44,18 @@ class ModuleControllerIT {
                 .containsExactly("1. Module", "2. Module", "3. Module");
 
     }
+
+    @Test
+    void getModuleTest() {
+        template.postForObject("/api/modules", new CreateModuleCommand("1. Module", "http://t360.com/modules/1"),
+                ModuleDto.class);
+        template.postForObject("/api/modules", new CreateModuleCommand("2. Module", "http://t360.com/modules/2"),
+                ModuleDto.class);
+        Long id = template.postForObject("/api/modules", new CreateModuleCommand("3. Module", "http://t360.com/modules/3"),
+                ModuleDto.class).getId();
+
+        ModuleDto moduleDto = template.getForObject("/api/modules/" + id, ModuleDto.class);
+
+        assertEquals("3. Module", moduleDto.getTitle());
+    }
 }
