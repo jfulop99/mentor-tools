@@ -1,9 +1,11 @@
 package com.training360.mentortools.module;
 
+import com.training360.mentortools.lesson.*;
 import com.training360.mentortools.registration.RecordNotFoundException;
 import lombok.AllArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.net.URI;
 import java.util.List;
@@ -13,6 +15,7 @@ import java.util.List;
 public class ModuleService {
 
     private ModuleRepository moduleRepository;
+    private LessonRepository lessonRepository;
     private ModelMapper modelMapper;
 
     public List<ModuleDto> findModules() {
@@ -48,5 +51,15 @@ public class ModuleService {
     public void deleteModule(Long id) {
         Module module = findModule(id);
         moduleRepository.delete(module);
+    }
+
+    @Transactional
+    public LessonDto createLesson(Long id, CreateLessonCommand command) {
+        Module module = findModule(id);
+        Lesson lesson = new Lesson(command.getTitle(), command.getUrl());
+        module.addLesson(lesson);
+        lessonRepository.save(lesson);
+
+        return modelMapper.map(lesson, LessonDto.class);
     }
 }

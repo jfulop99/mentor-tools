@@ -1,5 +1,7 @@
 package com.training360.mentortools.module;
 
+import com.training360.mentortools.lesson.CreateLessonCommand;
+import com.training360.mentortools.lesson.LessonDto;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.AllArgsConstructor;
@@ -46,4 +48,11 @@ public class ModuleController {
         moduleService.deleteModule(id);
     }
 
-}
+    @PostMapping("/{id}/lessons")
+    @Operation(description = "Create a lesson for a module")
+    public LessonDto createLesson(@PathVariable Long id, @Valid @RequestBody CreateLessonCommand command){
+        return moduleService.createLesson(id, command);
+    }
+
+
+    }
