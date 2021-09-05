@@ -1,11 +1,14 @@
 package com.training360.mentortools.trainingclass;
 
-import com.training360.mentortools.syllabus.CreateSyllabusCommand;
-import com.training360.mentortools.syllabus.SyllabusDto;
+import com.training360.mentortools.lesson.CreateLessonCommand;
+import com.training360.mentortools.lesson.LessonDto;
+import com.training360.mentortools.module.CreateModuleCommand;
+import com.training360.mentortools.module.ModuleDto;
+import com.training360.mentortools.module.ModuleService;
+import com.training360.mentortools.syllabus.*;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.context.TestComponent;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpMethod;
@@ -14,17 +17,28 @@ import org.zalando.problem.Problem;
 import org.zalando.problem.Status;
 
 import java.time.LocalDate;
+import java.util.Collection;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@Sql(statements ={"delete from registrations", "delete from training_classes", "delete from syllabuses"})
+@Sql(statements = {"delete from lesson_completions", "delete from lessons", "delete from registrations", "delete from training_classes",
+        "delete from syllabuses_modules", "delete from modules", "delete from syllabuses", "delete from students"})
 class TrainingClassControllerIT {
 
     @Autowired
     TestRestTemplate template;
+
+    @Autowired
+    ModuleService moduleService;
+
+    @Autowired
+    SyllabusService syllabusService;
+
+    @Autowired
+    TrainingClassService trainingClassService;
 
     @Test
     void getAllTrainingClassTest(){
@@ -179,5 +193,47 @@ class TrainingClassControllerIT {
                 TrainingClassDto.class);
 
         assertEquals("Frontend",trainingClassReturn4.getSyllabus().getName());
+    }
+
+    @Test
+    void fullTrainingClassTest(){
+        Long firstModuleId = moduleService.createModule(new CreateModuleCommand("1. Module", "http://")).getId();
+        Long secondModuleId = moduleService.createModule(new CreateModuleCommand("2. Module", "http://")).getId();
+        Long thirdModuleId = moduleService.createModule(new CreateModuleCommand("3. Module", "http://")).getId();
+
+        moduleService.createLesson(firstModuleId, new CreateLessonCommand("1. Lesson", "http://"));
+        moduleService.createLesson(firstModuleId, new CreateLessonCommand("2. Lesson", "http://"));
+        moduleService.createLesson(firstModuleId, new CreateLessonCommand("3. Lesson", "http://"));
+        moduleService.createLesson(secondModuleId, new CreateLessonCommand("21. Lesson", "http://"));
+        moduleService.createLesson(thirdModuleId, new CreateLessonCommand("31. Lesson", "http://"));
+        moduleService.createLesson(thirdModuleId, new CreateLessonCommand("32. Lesson", "http://"));
+        moduleService.createLesson(thirdModuleId, new CreateLessonCommand("33. Lesson", "http://"));
+
+        SyllabusDto syllabus = syllabusService.createSyllabus(new CreateSyllabusCommand("Java Backend"));
+
+        LocalDate startDate = LocalDate.of(2021, 1, 1);
+        LocalDate endDate = LocalDate.of(2021, 6, 1);
+
+        Long trainingClassId = trainingClassService
+                .addTrainingClass(new CreateTrainingClassCommand("FirstClass", new CourseInterval(startDate, endDate)))
+                .getId();
+
+        syllabusService.addModule(syllabus.getId(), new AddModuleCommand(firstModuleId));
+        syllabusService.addModule(syllabus.getId(), new AddModuleCommand(thirdModuleId));
+
+        trainingClassService.addSyllabus(trainingClassId, new SyllabusCommand(syllabus.getId()));
+
+        TrainingClassDto trainingClassDto = template.getForObject("/api/trainingclasses/"+ trainingClassId, TrainingClassDto.class);
+
+        List<LessonDto> lessons = trainingClassDto.getSyllabus().getModules()
+                .stream()
+                .map(ModuleDto::getLessons)
+                .flatMap(Collection::stream)
+                .toList();
+
+        assertThat(lessons).hasSize(6)
+                .extracting(LessonDto::getTitle)
+                .containsExactly("1. Lesson", "2. Lesson", "3. Lesson", "31. Lesson", "32. Lesson", "33. Lesson");
+
     }
 }

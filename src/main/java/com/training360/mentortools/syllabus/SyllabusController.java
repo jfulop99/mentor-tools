@@ -46,4 +46,9 @@ public class SyllabusController {
         syllabusService.deleteSyllabusById(id);
     }
 
+    @PostMapping("/{id}/modules")
+    @Operation(summary = "Add module to syllabus")
+    public SyllabusDto addModule(@PathVariable Long id, @Valid @RequestBody AddModuleCommand command){
+        return syllabusService.addModule(id, command);
+    }
 }

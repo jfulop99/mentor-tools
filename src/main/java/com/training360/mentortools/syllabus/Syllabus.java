@@ -39,6 +39,13 @@ public class Syllabus {
         trainingClass.setSyllabus(this);
     }
 
+    public void addModule(Module module){
+        if (modules == null){
+            modules = new ArrayList<>();
+        }
+        modules.add(module);
+    }
+
     public Syllabus(String name) {
         this.name = name;
     }
