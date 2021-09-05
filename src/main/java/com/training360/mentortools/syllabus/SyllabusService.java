@@ -3,6 +3,7 @@ package com.training360.mentortools.syllabus;
 import com.training360.mentortools.module.Module;
 import com.training360.mentortools.module.ModuleService;
 import com.training360.mentortools.registration.RecordNotFoundException;
+import com.training360.mentortools.trainingclass.TrainingClassRepository;
 import com.training360.mentortools.trainingclass.TrainingClassService;
 import lombok.AllArgsConstructor;
 import org.modelmapper.ModelMapper;
@@ -19,7 +20,7 @@ public class SyllabusService {
     private SyllabusRepository syllabusRepository;
     private ModelMapper modelMapper;
     private ModuleService moduleService;
-    private TrainingClassService trainingClassService;
+    private TrainingClassRepository trainingClassRepository;
 
     public SyllabusDto createSyllabus(CreateSyllabusCommand command) {
         Syllabus syllabus = new Syllabus(command.getName());
@@ -54,7 +55,8 @@ public class SyllabusService {
     @Transactional
     public void deleteSyllabusById(Long id) {
         Syllabus syllabus = findSyllabus(id);
-        trainingClassService.deleteSyllabusFromTrainingClass(id);
+        trainingClassRepository.findAllBySyllabus_Id(id)
+                .forEach(trainingClass -> trainingClass.setSyllabus(null));
         syllabusRepository.delete(syllabus);
     }
 

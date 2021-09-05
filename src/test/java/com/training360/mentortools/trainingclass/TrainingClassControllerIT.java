@@ -22,6 +22,7 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @Sql(statements = {"delete from lesson_completions", "delete from lessons", "delete from registrations", "delete from training_classes",
@@ -30,15 +31,6 @@ class TrainingClassControllerIT {
 
     @Autowired
     TestRestTemplate template;
-
-    @Autowired
-    ModuleService moduleService;
-
-    @Autowired
-    SyllabusService syllabusService;
-
-    @Autowired
-    TrainingClassService trainingClassService;
 
     @Test
     void getAllTrainingClassTest(){
@@ -197,31 +189,37 @@ class TrainingClassControllerIT {
 
     @Test
     void fullTrainingClassTest(){
-        Long firstModuleId = moduleService.createModule(new CreateModuleCommand("1. Module", "http://")).getId();
-        Long secondModuleId = moduleService.createModule(new CreateModuleCommand("2. Module", "http://")).getId();
-        Long thirdModuleId = moduleService.createModule(new CreateModuleCommand("3. Module", "http://")).getId();
 
-        moduleService.createLesson(firstModuleId, new CreateLessonCommand("1. Lesson", "http://"));
-        moduleService.createLesson(firstModuleId, new CreateLessonCommand("2. Lesson", "http://"));
-        moduleService.createLesson(firstModuleId, new CreateLessonCommand("3. Lesson", "http://"));
-        moduleService.createLesson(secondModuleId, new CreateLessonCommand("21. Lesson", "http://"));
-        moduleService.createLesson(thirdModuleId, new CreateLessonCommand("31. Lesson", "http://"));
-        moduleService.createLesson(thirdModuleId, new CreateLessonCommand("32. Lesson", "http://"));
-        moduleService.createLesson(thirdModuleId, new CreateLessonCommand("33. Lesson", "http://"));
+        Long firstModuleId = template
+                .postForObject("/api/modules", new CreateModuleCommand("1. Module", "http://"), ModuleDto.class).getId();
+        Long secondModuleId = template
+                .postForObject("/api/modules", new CreateModuleCommand("2. Module", "http://"), ModuleDto.class).getId();
+        Long thirdModuleId = template
+                .postForObject("/api/modules", new CreateModuleCommand("3. Module", "http://"), ModuleDto.class).getId();
 
-        SyllabusDto syllabus = syllabusService.createSyllabus(new CreateSyllabusCommand("Java Backend"));
+        template.postForObject("/api/modules/" + firstModuleId + "/lessons", new CreateLessonCommand("1. Lesson", "http://"), LessonDto.class);
+        template.postForObject("/api/modules/" + firstModuleId + "/lessons", new CreateLessonCommand("2. Lesson", "http://"), LessonDto.class);
+        template.postForObject("/api/modules/" + firstModuleId + "/lessons", new CreateLessonCommand("3. Lesson", "http://"), LessonDto.class);
+        template.postForObject("/api/modules/" + secondModuleId + "/lessons", new CreateLessonCommand("21. Lesson", "http://"), LessonDto.class);
+        template.postForObject("/api/modules/" + thirdModuleId + "/lessons", new CreateLessonCommand("31. Lesson", "http://"), LessonDto.class);
+        template.postForObject("/api/modules/" + thirdModuleId + "/lessons", new CreateLessonCommand("32. Lesson", "http://"), LessonDto.class);
+        template.postForObject("/api/modules/" + thirdModuleId + "/lessons", new CreateLessonCommand("33. Lesson", "http://"), LessonDto.class);
+
+        SyllabusDto firstSyllabus = template.postForObject("/api/syllabuses", new CreateSyllabusCommand("Java Backend"), SyllabusDto.class);
+        SyllabusDto secondSyllabus = template.postForObject("/api/syllabuses", new CreateSyllabusCommand("Frontend"), SyllabusDto.class);
 
         LocalDate startDate = LocalDate.of(2021, 1, 1);
         LocalDate endDate = LocalDate.of(2021, 6, 1);
 
-        Long trainingClassId = trainingClassService
-                .addTrainingClass(new CreateTrainingClassCommand("FirstClass", new CourseInterval(startDate, endDate)))
-                .getId();
+        Long trainingClassId = template.postForObject("/api/trainingclasses",
+                new CreateTrainingClassCommand("FirstClass", new CourseInterval(startDate, endDate)), TrainingClassDto.class).getId();
 
-        syllabusService.addModule(syllabus.getId(), new AddModuleCommand(firstModuleId));
-        syllabusService.addModule(syllabus.getId(), new AddModuleCommand(thirdModuleId));
+        template.postForObject("/api/syllabuses/" + firstSyllabus.getId() + "/modules", new AddModuleCommand(firstModuleId), SyllabusDto.class);
+        template.postForObject("/api/syllabuses/" + firstSyllabus.getId() + "/modules", new AddModuleCommand(thirdModuleId), SyllabusDto.class);
 
-        trainingClassService.addSyllabus(trainingClassId, new SyllabusCommand(syllabus.getId()));
+        template.postForObject("/api/syllabuses/" + secondSyllabus.getId() + "/modules", new AddModuleCommand(secondModuleId), SyllabusDto.class);
+
+        template.postForObject("/api/trainingclasses/" + trainingClassId + "/syllabuses", new SyllabusCommand(firstSyllabus.getId()), TrainingClassDto.class);
 
         TrainingClassDto trainingClassDto = template.getForObject("/api/trainingclasses/"+ trainingClassId, TrainingClassDto.class);
 
@@ -234,6 +232,26 @@ class TrainingClassControllerIT {
         assertThat(lessons).hasSize(6)
                 .extracting(LessonDto::getTitle)
                 .containsExactly("1. Lesson", "2. Lesson", "3. Lesson", "31. Lesson", "32. Lesson", "33. Lesson");
+
+        template.delete("/api/syllabuses/" + firstSyllabus.getId());
+
+        TrainingClassDto otherTrainingClassDto = template.getForObject("/api/trainingclasses/" + trainingClassId, TrainingClassDto.class);
+
+        assertNull(otherTrainingClassDto.getSyllabus());
+
+        template.postForObject("/api/trainingclasses/" + trainingClassId + "/syllabuses", new SyllabusCommand(secondSyllabus.getId()), TrainingClassDto.class);
+
+        trainingClassDto = template.getForObject("/api/trainingclasses/" + trainingClassId, TrainingClassDto.class);
+
+        lessons = trainingClassDto.getSyllabus().getModules()
+                .stream()
+                .map(ModuleDto::getLessons)
+                .flatMap(Collection::stream)
+                .toList();
+
+        assertThat(lessons).hasSize(1)
+                .extracting(LessonDto::getTitle)
+                .containsExactly("21. Lesson");
 
     }
 }

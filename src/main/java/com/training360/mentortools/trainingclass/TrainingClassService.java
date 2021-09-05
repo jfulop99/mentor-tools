@@ -77,8 +77,4 @@ public class TrainingClassService {
         return modelMapper.map(trainingClass, TrainingClassDto.class);
     }
 
-    public void deleteSyllabusFromTrainingClass(Long id) {
-        trainingClassRepository.findAllBySyllabus_Id(id)
-                .forEach(trainingClass -> trainingClass.setSyllabus(null));
-    }
 }
